@@ -1,0 +1,8 @@
+pyspark
+datasets
+sentence-transformers
+scikit-learn
+matplotlib
+seaborn
+pandas
+numpy
