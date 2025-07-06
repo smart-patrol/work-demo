@@ -7,6 +7,11 @@ import os
 def create_visualizations(spark: SparkSession, df):
     """
     Creates and saves 4 plots showing the 2D embeddings.
+
+    FUTURE IMPROVEMENT: The function currently calls `.toPandas()` on the entire DataFrame, which
+    can lead to memory errors on the driver node if the dataset is large. A more scalable
+    approach would be to `.sample()` the DataFrame before collecting it to Pandas, ensuring
+    that the visualization step works regardless of the dataset size.
     """
     # Collect data to Pandas DataFrame for plotting
     # Be cautious with very large datasets; consider sampling if memory is an issue

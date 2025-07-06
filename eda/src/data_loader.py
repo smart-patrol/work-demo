@@ -14,6 +14,12 @@ def load_and_filter_data(spark: SparkSession):
     spark_df = spark.createDataFrame(dataset)
 
     # Get 5 unique companies
+    # FUTURE IMPROVEMENT: The selection of 5 companies is random (`.limit(5)`), which means the
+    # analysis will run on a different set of companies each time. For reproducible and
+    # consistent analysis, it would be better to either:
+    # 1.  Hardcode a specific list of company CIKs to filter on.
+    # 2.  Sort the distinct companies by CIK before taking the top 5, ensuring the same
+    #     companies are selected in every run.
     unique_companies = spark_df.select("cik").distinct().limit(5)
     
     # Filter the DataFrame to keep only the selected companies

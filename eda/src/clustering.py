@@ -37,7 +37,10 @@ def process_and_cluster(spark: SparkSession, df):
     pca_50_df.count()
 
     # 3. Additional dimensionality reduction to 2D (using PCA)
-    # UMAP is not directly available in PySpark MLlib, so using PCA for 2D reduction
+    # FUTURE IMPROVEMENT: PCA is used for its speed and availability in PySpark. However, for visualization,
+    # UMAP or t-SNE often produce more meaningful and well-separated clusters by better preserving
+    # the local structure of the data. This would require converting a sample of the data to a Pandas
+    # DataFrame and using a library like 'umap-learn' or 'scikit-learn'.
     pca_2 = PCA(k=2, inputCol="pca_features_50", outputCol="pca_features_2d")
     pca_2_model = pca_2.fit(pca_50_df)
     pca_2d_df = pca_2_model.transform(pca_50_df)
@@ -46,7 +49,10 @@ def process_and_cluster(spark: SparkSession, df):
     pca_2d_df.cache()
     pca_2d_df.count()
 
-    # 4. KMeans clustering (start with k=5-10 clusters)
+    # 4. KMeans clustering
+    # FUTURE IMPROVEMENT: The number of clusters (k=7) is hardcoded. This is not ideal as the optimal
+    # number of clusters can vary. A better approach is to use the Elbow Method or Silhouette Score
+    # to programmatically determine the optimal 'k' by testing a range of values.
     kmeans = KMeans().setK(7).setSeed(1)
     kmeans_model = kmeans.fit(pca_2d_df)
     clustered_df = kmeans_model.transform(pca_2d_df)

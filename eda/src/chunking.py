@@ -36,6 +36,15 @@ def chunk_sections(spark: SparkSession, df):
     """
     Splits documents by section and then further splits long sections into ~500 word chunks.
     Preserves metadata (company, section number, chunk index).
+
+    FUTURE IMPROVEMENT: The current chunking strategy uses a fixed size of 500 words, which is
+    arbitrary and can split coherent ideas or sentences. More advanced techniques could be used:
+    1.  **Sentence-based Splitting**: Use NLP libraries like NLTK or spaCy to split text into
+        sentences and then group them into chunks.
+    2.  **Recursive Chunking**: Split text by paragraphs, then sentences, with overlap to preserve
+        context across chunks.
+    3.  **Semantic Chunking**: Use models to split text based on semantic similarity, ensuring
+        that each chunk is topically coherent.
     """
     # Define schema for the exploded DataFrame
     chunk_schema = ArrayType(ArrayType(StringType()))
