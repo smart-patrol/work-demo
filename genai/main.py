@@ -11,6 +11,10 @@ warnings.filterwarnings('ignore')
 class DocumentProcessor:
     def __init__(self, model_name='all-MiniLM-L6-v2'):
         """Initialize the document processor with a sentence transformer model."""
+        # FUTURE IMPROVEMENT: The choice of model is critical. While 'all-MiniLM-L6-v2' is fast and efficient,
+        # it may not be the best for nuanced, domain-specific (e.g., financial) text.
+        # A model fine-tuned on financial or legal documents, or a larger, more powerful model like
+        # 'all-mpnet-base-v2' or even a cross-encoder for a re-ranking step, could yield better results.
         self.model = SentenceTransformer(model_name)
         self.chunks = []
         self.embeddings = None
@@ -27,6 +31,18 @@ class DocumentProcessor:
         Convert documents to chunks with metadata.
         We'll focus on 5 attributes: section_1, section_1A, section_7, section_8, section_10
         """
+        # FUTURE IMPROVEMENT: The current chunking strategy is a major point of failure.
+        # A fixed-size word count (500 words) is arbitrary and often splits a single coherent idea,
+        # sentence, or paragraph into two separate chunks. This is why the validation sometimes finds
+        # the answer in "chunk #2".
+        #
+        # Better strategies would include:
+        # 1.  Recursive Character Text Splitting: A more sophisticated method that tries to split on
+        #     paragraphs, then sentences, then words, preserving semantic units.
+        # 2.  Overlap: Creating chunks with a significant overlap (e.g., 100 words) ensures that a
+        #     complete thought is less likely to be split across the boundary of two chunks.
+        # 3.  Semantic Chunking: Using NLP libraries (like spaCy or NLTK) to split text based on
+        #     sentence boundaries or even more complex semantic analysis.
         chunks = []
         selected_sections = ['section_1', 'section_1A', 'section_7', 'section_8', 'section_10']
         
@@ -84,6 +100,21 @@ class DocumentProcessor:
         """Search for relevant chunks from a specific year."""
         if self.embeddings is None:
             raise ValueError("No embeddings available. Please create embeddings first.")
+        
+        # FUTURE IMPROVEMENT: The search process itself is too simple.
+        # It relies solely on the cosine similarity of one embedding vs. all others. This can be noisy
+        # and lead to the observed failures where retrieved chunks are thematically similar but
+        # factually incorrect.
+        #
+        # Better strategies would include:
+        # 1.  Re-ranking: Use the current (fast) model to retrieve a larger set of initial candidates
+        #     (e.g., top 20) and then use a more powerful, but slower, cross-encoder model to re-rank
+        #     these candidates for factual accuracy.
+        # 2.  Query Expansion/Transformation: Instead of using the user's raw query, it could be
+        #     expanded with synonyms or re-written into multiple hypothetical answers that are then
+        #     used for the search, improving the chance of a good match.
+        # 3.  Hybrid Search: Combine the current semantic search with a traditional keyword-based
+        #     search (like BM25) to get the best of both worlds—relevance and keyword matching.
         
         # Encode the query
         query_embedding = self.model.encode([query], convert_to_tensor=True).cpu().numpy()
@@ -204,7 +235,7 @@ def main():
     processor = DocumentProcessor()
     
     # Load data
-    df = processor.load_data('edgar_cik_1411906_filtered.csv')
+    df = processor.load_data('data/edgar_cik_1411906_filtered.csv')
     
     # Choose a specific year for demonstration
     target_year = 2020
